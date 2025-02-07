@@ -5,58 +5,8 @@ import 'package:redpulse/features/screens/admin/home.dart';
 import 'package:redpulse/features/screens/admin/inventory.dart';
 import 'package:redpulse/features/screens/admin/profile.dart';
 import 'package:redpulse/features/screens/admin/reservation.dart';
-import 'package:redpulse/features/screens/user/home.dart';
-import 'package:redpulse/features/screens/user/search.dart';
-import 'package:redpulse/services/auth.dart';
 import 'package:redpulse/utilities/constants/styles.dart';
-
-/*class ABottomBar extends StatefulWidget {
-  const ABottomBar({super.key});
-  @override
-  State<ABottomBar> createState() => _ABottomBarState();
-}
-
-class _ABottomBarState extends State<ABottomBar> {
-  int _selectedIndex = 0;
-  static final List<Widget>_widgetOptions =<Widget>[
-    const AdminHome(),
-    const Text("Reservation"),
-    const Text("Inventory"),
-    const Text("Profile")
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        body: Center(
-          child: _widgetOptions[_selectedIndex],
-        ),
-        bottomNavigationBar: BottomNavigationBar(
-          backgroundColor: Styles.tertiaryColor,
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-          elevation: 10,
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          selectedItemColor: const Color(0xFFB8001F),
-          type: BottomNavigationBarType.fixed,
-          unselectedItemColor: Colors.black,
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home_outlined, size: 30), label:"Home"),
-            BottomNavigationBarItem(icon: Icon(Icons.ballot_outlined, size: 30), label:"Reservation"),
-            BottomNavigationBarItem(icon: Icon(Icons.bloodtype_outlined, size: 30), label:"Inventory"),
-            BottomNavigationBarItem(icon: Icon(Icons.person_outline_rounded, size: 30), label:"Profile")
-          ],
-        )
-    );
-  }
-}*/
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 
 class ABottomBar extends StatefulWidget {
   final bool isAdminLinkedToBloodBank;
@@ -65,13 +15,13 @@ class ABottomBar extends StatefulWidget {
 
   Future<String?> get bloodBankId async {
     try {
-      // Fetch the current authenticated user
+      // Fetch the current authenticated user.
       final User? user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         throw Exception("Admin is not logged in.");
       }
 
-      // Use the user's UID to fetch the corresponding document from Firestore
+      // Retrieve the admin document from Firestore.
       DocumentSnapshot adminSnapshot = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -81,17 +31,15 @@ class ABottomBar extends StatefulWidget {
         throw Exception("Admin document not found.");
       }
 
-      // Check if the bloodBankId field exists in the document
+      // Check and retrieve the bloodBankId.
       String? bloodBankId = adminSnapshot['bloodBankId'];
-
       if (bloodBankId == null || bloodBankId.isEmpty) {
         throw Exception("Admin is not linked to a blood bank.");
       }
-
-      return bloodBankId; // Return the bloodBankId if found
+      return bloodBankId;
     } catch (error) {
       print("Error fetching bloodBankId: $error");
-      return null; // Return null on failure
+      return null;
     }
   }
 
@@ -100,74 +48,95 @@ class ABottomBar extends StatefulWidget {
 }
 
 class _ABottomBarState extends State<ABottomBar> {
+  // The currently selected tab index.
   int _selectedIndex = 0;
 
-  // This method dynamically creates the widget options based on isAdminLinkedToBloodBank
-  // Create a list of widgets for each navigation tab
+  // Global key for the CurvedNavigationBar widget.
+  final GlobalKey<CurvedNavigationBarState> _bottomNavigationKey = GlobalKey();
+
+  // Navigation history to keep track of previously selected tab indices.
+  final List<int> _navigationHistory = [0];
+
+  /// Dynamically creates the widget options based on the provided bloodBankId.
   List<Widget> _getWidgetOptions(String? bloodBankId) {
     return [
-      AdminHome(isAdminLinkedToBloodBank: widget.isAdminLinkedToBloodBank, bloodBankId: '',), // Home screen
-      //const ReservationScreen(),
-      //const Text("Reservation"), // Reservation screen
+      AdminHome(
+        isAdminLinkedToBloodBank: widget.isAdminLinkedToBloodBank,
+        bloodBankId: '', // Pass an empty string or a default value if needed.
+      ),
       AdminReservationScreen(bloodBankId: bloodBankId ?? "null"),
-      Inventory(bloodBankId: bloodBankId ?? "null"), // Inventory screen
-      const ProfileScreen(), // Profile screen
+      Inventory(bloodBankId: bloodBankId ?? "null"),
+      const ProfileScreen(),
     ];
   }
 
+  /// Updates the selected tab and records the change in the navigation history.
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    if (index != _selectedIndex) {
+      setState(() {
+        _selectedIndex = index;
+        _navigationHistory.add(index);
+      });
+    }
+  }
+
+  /// Intercepts the back button press.
+  ///
+  /// If there is a previous tab in the history, this method updates the UI
+  /// to show that tab and returns false to indicate that the pop has been handled.
+  /// If no history remains, it returns true to allow the default behavior.
+  Future<bool> _onWillPop() async {
+    if (_navigationHistory.length > 1) {
+      setState(() {
+        _navigationHistory.removeLast();
+        _selectedIndex = _navigationHistory.last;
+      });
+      return false; // Handled internally.
+    }
+    return true; // No more history; allow default back button behavior.
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<String?>(
-      future: widget.bloodBankId, // Fetch the bloodBankId asynchronously
+      future: widget.bloodBankId, // Asynchronously fetch the bloodBankId.
       builder: (context, snapshot) {
-        String? bloodBankId;
-
-        if (snapshot.hasData) {
-          bloodBankId = snapshot.data; // Use the fetched data
-        } else {
-          // Set default bloodBankId if data is not available
-          bloodBankId = "null";
-        }
-
-        // List of options based on selectedIndex
+        // Use the fetched bloodBankId or a default value.
+        String? bloodBankId = snapshot.hasData ? snapshot.data : "null";
+        // Create the list of widget options based on the bloodBankId.
         List<Widget> _widgetOptions = _getWidgetOptions(bloodBankId);
 
-        return Scaffold(
-          backgroundColor: Colors.white,
-          body: Center(
-            child: _widgetOptions[_selectedIndex], // Display selected option
-          ),
-          bottomNavigationBar: BottomNavigationBar(
-            backgroundColor: Styles.tertiaryColor,
-            currentIndex: _selectedIndex,
-            onTap: _onItemTapped,
-            elevation: 10,
-            showSelectedLabels: false,
-            showUnselectedLabels: false,
-            selectedItemColor: const Color(0xFFB8001F),
-            type: BottomNavigationBarType.fixed,
-            unselectedItemColor: Colors.black,
-            items: const [
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.home_outlined, size: 30), label: "Home"),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.ballot_outlined, size: 30), label: "Reservation"),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.bloodtype_outlined, size: 30), label: "Inventory"),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.person_outline_rounded, size: 30), label: "Profile"),
-            ],
+        return WillPopScope(
+          onWillPop: _onWillPop,
+          child: Scaffold(
+            backgroundColor: Colors.red,
+            body: Center(
+              child: _widgetOptions[_selectedIndex],
+            ),
+            bottomNavigationBar: CurvedNavigationBar(
+              key: _bottomNavigationKey,
+              index: _selectedIndex,
+              height: 65.0,
+              items: const <Widget>[
+                Icon(Icons.home_outlined, size: 30, color: Colors.white),
+                Icon(Icons.ballot_outlined, size: 30, color: Colors.white),
+                Icon(Icons.bloodtype_outlined, size: 30, color: Colors.white),
+                Icon(Icons.person_outline_rounded, size: 30, color: Colors.white),
+              ],
+              // The color of the navigation bar itself.
+              color: Styles.primaryColor,
+              // The background color of the floating button (the selected tab).
+              buttonBackgroundColor: const Color(0xFFB8001F),
+              // The color that fills the area behind the navigation bar.
+              backgroundColor: Colors.white,
+              animationCurve: Curves.easeInOut,
+              animationDuration: const Duration(milliseconds: 600),
+              onTap: _onItemTapped,
+              letIndexChange: (index) => true,
+            ),
           ),
         );
       },
     );
   }
 }
-
-

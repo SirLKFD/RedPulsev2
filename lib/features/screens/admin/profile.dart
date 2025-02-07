@@ -31,16 +31,16 @@ class ProfileScreen extends StatelessWidget {
                     "Profile",
                     style: Styles.headerStyle2.copyWith(
                       fontSize: 22,
-                      fontWeight: FontWeight.bold, color: Styles.tertiaryColor
+                      fontWeight: FontWeight.bold,
+                      color: Styles.tertiaryColor,
                     ),
-                  ),     
+                  ),
                 ],
               ),
             ),
           ),
         ),
       ),
-
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
@@ -49,8 +49,14 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 50),
             // Admin Profile Navigation Tile
             ListTile(
-              //leading: const Icon(Icons.person_outline, color: Colors.blueAccent),
-              title: Text("My Account", style: Styles.headerStyle3.copyWith(fontSize: 18, fontWeight: FontWeight.bold, color: Styles.accentColor)),
+              title: Text(
+                "My Account",
+                style: Styles.headerStyle3.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Styles.accentColor,
+                ),
+              ),
               trailing: const Icon(Icons.arrow_forward_ios_outlined, size: 16),
               onTap: () {
                 Navigator.push(
@@ -65,9 +71,14 @@ class ProfileScreen extends StatelessWidget {
 
             // Blood Bank Profile Navigation Tile
             ListTile(
-              //tileColor: Colors.blueAccent,
-              //leading: const Icon(Icons.local_hospital_outlined, color: Colors.redAccent),
-              title: Text("Blood Bank Account", style: Styles.headerStyle3.copyWith(fontSize: 18, fontWeight: FontWeight.bold, color: Styles.accentColor)),
+              title: Text(
+                "Blood Bank Account",
+                style: Styles.headerStyle3.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Styles.accentColor,
+                ),
+              ),
               trailing: const Icon(Icons.arrow_forward_ios_outlined, size: 16),
               onTap: () {
                 Navigator.push(
@@ -80,16 +91,26 @@ class ProfileScreen extends StatelessWidget {
             ),
             const Divider(), // Simple Line Separator
 
+            // Log Out Navigation Tile
             ListTile(
-              //leading: const Icon(Icons.local_hospital_outlined, color: Colors.redAccent),
-              title: Text("Log Out", style: Styles.headerStyle3.copyWith(fontSize: 18, fontWeight: FontWeight.bold, color: Styles.primaryColor)),
+              title: Text(
+                "Log Out",
+                style: Styles.headerStyle3.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Styles.primaryColor,
+                ),
+              ),
               trailing: const Icon(Icons.arrow_forward_ios_outlined, size: 16),
               onTap: () {
-                Navigator.push(
-                  context,
+                // Optionally: Add your sign-out logic here (e.g., FirebaseAuth.instance.signOut();)
+
+                // Clear the navigation stack and navigate to the LoginScreen
+                Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(
                     builder: (context) => const LoginScreen(),
                   ),
+                      (Route<dynamic> route) => false,
                 );
               },
             ),
@@ -100,15 +121,3 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 }
-
-/*MyButtons(
-  onTap: () async {
-    await FirebaseServices().googleSignOut();
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => const LoginScreen(),
-      ),
-    );
-  },
-  text: "Log Out",
-),*/
