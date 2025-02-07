@@ -27,8 +27,7 @@ class AuthMethod {
   }) async {
     String res = "Some error Occurred";
     try {
-      if (email.isNotEmpty && password.isNotEmpty && firstName.isNotEmpty &&
-          lastName.isNotEmpty && phoneNumber.isNotEmpty && address.isNotEmpty) {
+      if (email.isNotEmpty && password.isNotEmpty && firstName.isNotEmpty && lastName.isNotEmpty && phoneNumber.isNotEmpty && address.isNotEmpty) {
         // Register user in auth with email and password
         UserCredential cred = await _auth.createUserWithEmailAndPassword(
           email: email,
@@ -51,10 +50,8 @@ class AuthMethod {
           email: email,
           phoneNumber: phoneNumber,
           address: address,
-          bloodType: bloodType.label,
-          // If the property expects a string
-          role: userRole.label,
-          // For string roles
+          bloodType: bloodType.label, // If the property expects a string
+          role: userRole.label,      // For string roles
           password: password,
           dateCreated: DateTime.now(),
           fullName: '$firstName $lastName',
@@ -67,13 +64,11 @@ class AuthMethod {
 
         // If the user is an Admin and no bloodBankId is provided, set bloodBankId to null
         if (userRole == AppRole.admin) {
-          userAdmin = userAdmin.copyWith(
-              bloodBankId: bloodBankId ?? null); // Use null if no bloodBankId
+          userAdmin = userAdmin.copyWith(bloodBankId: bloodBankId ?? null); // Use null if no bloodBankId
         }
 
         // Save user data to Firestore
-        await _firestore.collection("users").doc(systemGeneratedId).set(
-            userAdmin.toJson());
+        await _firestore.collection("users").doc(systemGeneratedId).set(userAdmin.toJson());
 
         res = "success";
       } else {
@@ -115,9 +110,7 @@ class AuthMethod {
           }
 
           // Get the user's data as a Map
-          Map<String, dynamic> userData = userSnapshot.data() as Map<
-              String,
-              dynamic>;
+          Map<String, dynamic> userData = userSnapshot.data() as Map<String, dynamic>;
 
           // Get the user's role and check if they are an admin
           String role = userData['role'];
@@ -128,25 +121,22 @@ class AuthMethod {
           if (isAdmin) {
             // Safely check if bloodBankId exists in the document
             String? bloodBankId = userData['bloodBankId'];
-            isAdminLinkedToBloodBank =
-                bloodBankId != null && bloodBankId.isNotEmpty;
+            isAdminLinkedToBloodBank = bloodBankId != null && bloodBankId.isNotEmpty;
           }
 
           // Navigate based on the user role
           if (isAdmin) {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
-                builder: (context) =>
-                    AdminStart(
-                      isAdminLinkedToBloodBank: isAdminLinkedToBloodBank,
-                    ),
+                builder: (context) => AdminStart(
+                  isAdminLinkedToBloodBank: isAdminLinkedToBloodBank,
+                ),
               ),
             );
           } else {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
-                builder: (
-                    context) => const UserStart(), // Regular user homepage
+                builder: (context) => const UserStart(), // Regular user homepage
               ),
             );
           }
@@ -170,133 +160,133 @@ class AuthMethod {
 
   /// Fetch the first name of the currently signed-in user
   Future<String> getUserName() async {
-    try {
-      // Get the currently authenticated user
-      User? currentUser = _auth.currentUser;
+  try {
+    // Get the currently authenticated user
+    User? currentUser = _auth.currentUser;
 
-      if (currentUser != null) {
-        // Fetch the user's document from Firestore
-        DocumentSnapshot userDoc = await _firestore
-            .collection('users')
-            .doc(currentUser.uid)
-            .get();
+    if (currentUser != null) {
+      // Fetch the user's document from Firestore
+      DocumentSnapshot userDoc = await _firestore
+          .collection('users')
+          .doc(currentUser.uid)
+          .get();
 
-        // Check if the document exists and safely access the 'fullName' field
-        if (userDoc.exists) {
-          // Cast the document data to a Map and access the 'fullName' field
-          var userData = userDoc.data() as Map<String, dynamic>?;
-          return userData?['fullName'] ??
-              "User"; // Use fallback if fullName is not found
-        } else {
-          throw Exception("User document does not exist");
-        }
+      // Check if the document exists and safely access the 'fullName' field
+      if (userDoc.exists) {
+        // Cast the document data to a Map and access the 'fullName' field
+        var userData = userDoc.data() as Map<String, dynamic>?;
+        return userData?['fullName'] ?? "User"; // Use fallback if fullName is not found
       } else {
-        throw Exception("No user is signed in");
+        throw Exception("User document does not exist");
       }
-    } catch (e) {
-      // Log the error message for debugging purposes
-      print("Error fetching user full name: $e");
-
-      // Return a fallback value
-      return "User";
+    } else {
+      throw Exception("No user is signed in");
     }
+  } catch (e) {
+    // Log the error message for debugging purposes
+    print("Error fetching user full name: $e");
+
+    // Return a fallback value
+    return "User";
   }
+}
 
 
-  Future<String> getAdminName() async {
-    try {
-      // Get the currently authenticated user
-      User? currentUser = _auth.currentUser;
 
-      if (currentUser != null) {
-        // Fetch the user's document from Firestore using the user's UID
-        DocumentSnapshot userDoc = await _firestore
-            .collection('users')
-            .doc(currentUser.uid)
-            .get();
+Future<String> getAdminName() async {
+  try {
+    // Get the currently authenticated user
+    User? currentUser = _auth.currentUser;
 
-        // Check if the document exists and access the 'id' field
-        if (userDoc.exists) {
-          // Cast the document data to a Map and access the 'id' field
-          var userData = userDoc.data() as Map<String, dynamic>?;
-          print("User data: $userData"); // Debugging line
-          String adminId = userData?['id'] ?? '';
-          print("Admin ID: $adminId"); // Debugging line
+    if (currentUser != null) {
+      // Fetch the user's document from Firestore using the user's UID
+      DocumentSnapshot userDoc = await _firestore
+          .collection('users')
+          .doc(currentUser.uid)
+          .get();
 
-          if (adminId.isNotEmpty) {
-            // Query Firestore to find the document with the matching 'id' and 'role' as 'Admin'
-            QuerySnapshot adminQuerySnapshot = await _firestore
-                .collection('users')
-                .where('id', isEqualTo: adminId)
-                .where('role', isEqualTo: 'Admin')
-                .get();
+      // Check if the document exists and access the 'id' field
+      if (userDoc.exists) {
+        // Cast the document data to a Map and access the 'id' field
+        var userData = userDoc.data() as Map<String, dynamic>?;
+        print("User data: $userData");  // Debugging line
+        String adminId = userData?['id'] ?? '';
+        print("Admin ID: $adminId");  // Debugging line
 
-            print("Admin query result: ${adminQuerySnapshot
-                .docs}"); // Debugging line
+        if (adminId.isNotEmpty) {
+          // Query Firestore to find the document with the matching 'id' and 'role' as 'Admin'
+          QuerySnapshot adminQuerySnapshot = await _firestore
+              .collection('users')
+              .where('id', isEqualTo: adminId)
+              .where('role', isEqualTo: 'Admin')
+              .get();
 
-            if (adminQuerySnapshot.docs.isNotEmpty) {
-              var adminDoc = adminQuerySnapshot.docs.first;
-              var adminData = adminDoc.data() as Map<String, dynamic>?;
-              print("Admin data: $adminData"); // Debugging line
-              return adminData?['fullName'] ??
-                  "Admin"; // Return full name or fallback
-            } else {
-              throw Exception(
-                  "Admin document with the specified id and role not found");
-            }
+          print("Admin query result: ${adminQuerySnapshot.docs}");  // Debugging line
+
+          if (adminQuerySnapshot.docs.isNotEmpty) {
+            var adminDoc = adminQuerySnapshot.docs.first;
+            var adminData = adminDoc.data() as Map<String, dynamic>?;
+            print("Admin data: $adminData");  // Debugging line
+            return adminData?['fullName'] ?? "Admin"; // Return full name or fallback
           } else {
-            throw Exception("Admin ID not found");
+            throw Exception("Admin document with the specified id and role not found");
           }
         } else {
-          throw Exception("User document does not exist");
+          throw Exception("Admin ID not found");
         }
       } else {
-        throw Exception("No user is signed in");
+        throw Exception("User document does not exist");
       }
-    } catch (e) {
-      // Log the error message for debugging purposes
-      print("Error fetching admin full name: $e");
-
-      // Return a fallback value in case of errors
-      return "Admin";
+    } else {
+      throw Exception("No user is signed in");
     }
+  } catch (e) {
+    // Log the error message for debugging purposes
+    print("Error fetching admin full name: $e");
+
+    // Return a fallback value in case of errors
+    return "Admin";
   }
+}
+
+
+
 
 
   Future<AppRole> getUserRole(String email) async {
-    try {
-      // Fetch user data from Firestore using the email
-      QuerySnapshot snapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .where('email', isEqualTo: email)
-          .get();
+  try {
+    // Fetch user data from Firestore using the email
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .get();
 
-      if (snapshot.docs.isNotEmpty) {
-        // Get the first document (since email is assumed to be unique)
-        var userDoc = snapshot.docs[0];
+    if (snapshot.docs.isNotEmpty) {
+      // Get the first document (since email is assumed to be unique)
+      var userDoc = snapshot.docs[0];
 
-        // Check if the 'role' field exists in the document
-        if (userDoc.exists && userDoc.data() != null) {
-          String role = userDoc['role'];
+      // Check if the 'role' field exists in the document
+      if (userDoc.exists && userDoc.data() != null) {
+        String role = userDoc['role'];
 
-          // Return role as AppRole enum (admin or user)
-          if (role == 'Admin') {
-            return AppRole.admin;
-          } else {
-            return AppRole.user;
-          }
+        // Return role as AppRole enum (admin or user)
+        if (role == 'Admin') {
+          return AppRole.admin;
         } else {
-          throw Exception("Role field is missing or document is malformed");
+          return AppRole.user;
         }
       } else {
-        // If the user is not found
-        throw Exception("User not found");
+        throw Exception("Role field is missing or document is malformed");
       }
-    } catch (e) {
-      // Handle errors (e.g., network issues, Firestore issues)
-      throw Exception("Failed to fetch user role: $e");
+    } else {
+      // If the user is not found
+      throw Exception("User not found");
     }
+  } catch (e) {
+    // Handle errors (e.g., network issues, Firestore issues)
+    throw Exception("Failed to fetch user role: $e");
   }
+}
 
   Future<String> getAdminId() async {
     try {
@@ -308,7 +298,7 @@ class AuthMethod {
 
       // Use the user's UID to fetch the corresponding document
       DocumentSnapshot adminSnapshot =
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
 
       if (!adminSnapshot.exists) {
         throw Exception("Admin document not found.");
@@ -332,8 +322,7 @@ class AuthMethod {
 
       if (doc.exists && doc.data() != null) {
         final data = doc.data() as Map<String, dynamic>;
-        return data['bloodBankName'] ??
-            'Unnamed Blood Bank'; // Fallback for missing name
+        return data['bloodBankName'] ?? 'Unnamed Blood Bank'; // Fallback for missing name
       } else {
         return 'Blood Bank Not Found';
       }
@@ -342,7 +331,6 @@ class AuthMethod {
       return 'Error fetching name';
     }
   }
-
   /// Registers a blood bank in the Firestore database.
   Future<String> registerBloodBank({
     required String bloodBankName,
@@ -364,14 +352,8 @@ class AuthMethod {
       String adminId = await getAdminId();
 
       // Generate unique Firestore IDs
-      String bloodBankId = _firestore
-          .collection("bloodbanks")
-          .doc()
-          .id;
-      String inventoryId = _firestore
-          .collection("inventories")
-          .doc()
-          .id;
+      String bloodBankId = _firestore.collection("bloodbanks").doc().id;
+      String inventoryId = _firestore.collection("inventories").doc().id;
 
       // Create a BloodBankModel object with inventoryId
       BloodBankModel bloodBank = BloodBankModel(
@@ -388,8 +370,7 @@ class AuthMethod {
       );
 
       // Save blood bank data to Firestore
-      await _firestore.collection("bloodbanks").doc(bloodBankId).set(
-          bloodBank.toJson());
+      await _firestore.collection("bloodbanks").doc(bloodBankId).set(bloodBank.toJson());
 
       // Initialize inventory for the blood bank by calling the Inventory class's method
       await InventoryModel.initializeBloodTypeInventory(bloodBankId);
@@ -407,7 +388,146 @@ class AuthMethod {
       // Return error message
       return "Failed to register blood bank. Please try again.";
     }
-  }
 }
 
 
+
+  /*Future<String> registerBloodBank({
+    required String bloodBankName,
+    required String email,
+    required String address,
+    required String contactNumber,
+    required double latitude,
+    required double longitude,
+  }) async {
+    try {
+      // Get the currently authenticated user
+      final User? user = FirebaseAuth.instance.currentUser;
+
+      if (user == null) {
+        return "No authenticated user found.";
+      }
+
+      // Call getAdminId() to fetch the admin ID
+      String adminId = await getAdminId();
+
+      // Generate unique Firestore IDs
+      String bloodBankId = _firestore.collection("bloodbanks").doc().id;
+      String inventoryId = _firestore.collection("inventories").doc().id;
+
+      // Create a BloodBankModel object with inventoryId
+      BloodBankModel bloodBank = BloodBankModel(
+        bloodBankId: bloodBankId,
+        adminId: adminId,
+        bloodBankName: bloodBankName,
+        email: email,
+        address: address,
+        contactNumber: contactNumber,
+        latitude: latitude,
+        longitude: longitude,
+        dateCreated: DateTime.now(),
+        inventoryId: inventoryId, // Link the inventory to the blood bank
+      );
+
+      // Save blood bank data to Firestore
+      await _firestore.collection("bloodbanks").doc(bloodBankId).set(bloodBank.toJson());
+
+      // Initialize inventory for the blood bank
+      await _firestore.collection("inventories").doc(inventoryId).set({
+        'inventoryId': inventoryId,
+        'bloodBankId': bloodBankId,
+        'bloodTypes': {
+          'A+': 0,
+          'A-': 0,
+          'B+': 0,
+          'B-': 0,
+          'O+': 0,
+          'O-': 0,
+          'AB+': 0,
+          'AB-': 0,
+        },
+        'lastUpdated': DateTime.now(),
+      });
+
+      // Update the admin's document with the new blood bank ID
+      await _firestore.collection('users').doc(user.uid).update({
+        'bloodBankId': bloodBankId, // Link the blood bank to the admin
+      });
+
+      return "Blood bank successfully registered.";
+    } catch (error) {
+      // Log the error (for debugging purposes)
+      print("Error registering blood bank: $error");
+
+      // Return error message
+      return "Failed to register blood bank. Please try again.";
+    }
+  }*/
+}
+
+/*
+class AuthMethod {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // SignUp User
+  Future<String> signupUser({
+    required String email,
+    required String password,
+    required String name,
+  }) async {
+    String res = "Some error Occurred";
+    try {
+      if (email.isNotEmpty ||
+          password.isNotEmpty ||
+          name.isNotEmpty) {
+        // register user in auth with email and password
+        UserCredential cred = await _auth.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+        // add user to your  firestore database
+        print(cred.user!.uid);
+        await _firestore.collection("users").doc(cred.user!.uid).set({
+          'name': name,
+          'uid': cred.user!.uid,
+          'email': email,
+        });
+
+        res = "success";
+      }
+    } catch (err) {
+      return err.toString();
+    }
+    return res;
+  }
+
+  // logIn user
+  Future<String> loginUser({
+    required String email,
+    required String password,
+  }) async {
+    String res = "Some error Occurred";
+    try {
+      if (email.isNotEmpty || password.isNotEmpty) {
+        // logging in user with email and password
+        await _auth.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+        res = "success";
+      } else {
+        res = "Please enter all the fields";
+      }
+    } catch (err) {
+      return err.toString();
+    }
+    return res;
+  }
+
+  // for sighout
+  signOut() async {
+    // await _auth.signOut();
+  }
+}
+ */
