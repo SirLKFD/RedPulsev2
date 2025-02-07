@@ -14,6 +14,9 @@ import 'package:redpulse/widgets/textfield.dart';
 import 'signup.dart';
 
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_moving_background/flutter_moving_background.dart';
+import 'package:flutter_moving_background/enums/animation_types.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -64,8 +67,17 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.red[500],
       body: SafeArea(
+        child: MovingBackground(
+        animationType: AnimationType.translation,
+         backgroundColor: Colors.grey[400],
+        circles: const [
+    MovingCircle(color: Colors.red),
+    MovingCircle(color: Colors.red),
+    MovingCircle(color: Colors.red),
+    MovingCircle(color: Colors.red),
+    MovingCircle(color: Colors.red),
+    ],
         child: SizedBox(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -163,6 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 }
