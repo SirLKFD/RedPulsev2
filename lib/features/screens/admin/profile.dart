@@ -4,6 +4,8 @@ import 'package:redpulse/features/screens/admin/sub/bloodbankprofile.dart';
 import 'package:redpulse/features/screens/login.dart';
 import 'package:redpulse/utilities/constants/styles.dart';
 
+import '../../../widgets/confirmLogout.dart';
+
 class ProfileScreen extends StatelessWidget {
   final String? adminId; // Made adminId optional
 
@@ -12,11 +14,16 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Styles.tertiaryColor,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(120),
         child: AppBar(
           backgroundColor: Styles.primaryColor,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(30),
+              topRight: Radius.circular(30),
+            ),
+          ),
           elevation: 0,
           flexibleSpace: Padding(
             padding: const EdgeInsets.all(20),
@@ -91,7 +98,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             const Divider(), // Simple Line Separator
 
-            // Log Out Navigation Tile
+            // Log Out Navigation Tile with confirmation
             ListTile(
               title: Text(
                 "Log Out",
@@ -102,16 +109,25 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               trailing: const Icon(Icons.arrow_forward_ios_outlined, size: 16),
-              onTap: () {
-                // Optionally: Add your sign-out logic here (e.g., FirebaseAuth.instance.signOut();)
-
-                // Clear the navigation stack and navigate to the LoginScreen
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(
-                    builder: (context) => const LoginScreen(),
-                  ),
-                      (Route<dynamic> route) => false,
+              onTap: () async {
+                // Show the logout confirmation dialog
+                final shouldLogout = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => const Confirmlogout(),
                 );
+
+                // If the user confirmed logout, perform sign-out logic and navigate to LoginScreen
+                if (shouldLogout == true) {
+                  // Optionally: Add your sign-out logic here, e.g.,
+                  // await FirebaseAuth.instance.signOut();
+
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(
+                      builder: (context) => const LoginScreen(),
+                    ),
+                        (Route<dynamic> route) => false,
+                  );
+                }
               },
             ),
             const Divider(),

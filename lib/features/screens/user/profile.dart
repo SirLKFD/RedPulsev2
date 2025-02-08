@@ -6,8 +6,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:redpulse/features/models/users.dart';
 import 'package:redpulse/features/screens/login.dart';
+import 'package:redpulse/features/screens/user/sub/updateprofile.dart';
 import 'package:redpulse/services/auth.dart';
 import 'package:redpulse/utilities/constants/styles.dart';
+
+import '../../../widgets/confirmLogout.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -95,11 +98,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Styles.tertiaryColor,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(120),
         child: AppBar(
           backgroundColor: Styles.primaryColor,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(30),
+              topRight: Radius.circular(30),
+            ),
+          ),
           elevation: 0,
           flexibleSpace: Padding(
             padding: const EdgeInsets.all(20),
@@ -180,15 +188,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 // Logout Button
                 ElevatedButton(
                   onPressed: () async {
-                    // Sign out from Firebase.
-                    await FirebaseAuth.instance.signOut();
-                    // Clear the navigation stack and navigate to the LoginScreen.
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                        builder: (context) => const LoginScreen(),
-                      ),
-                          (Route<dynamic> route) => false,
-                    );
+                // Show the confirmation dialog and await the result.
+                final shouldLogout = await showDialog<bool>(
+                context: context,
+                builder: (context) => const Confirmlogout(),
+                );
+
+                // If the user confirms the logout (i.e., shouldLogout is true)
+                if (shouldLogout == true) {
+                // Sign out from Firebase
+                await FirebaseAuth.instance.signOut();
+
+                // Clear the navigation stack and navigate to the LoginScreen.
+                Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                builder: (context) => const LoginScreen(),
+                ),
+                (Route<dynamic> route) => false,
+                );
+                }
                   },
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 50), // Full-width button.
@@ -200,6 +218,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   child: Text(
                     'Log Out',
+                    style: Styles.headerStyle6.copyWith(color: Styles.tertiaryColor),
+                  ),
+                ),
+                const SizedBox(height: 30),
+                // Edit Profile Button
+                // Update the 'Update Profile' button in ProfileScreen's build method
+                ElevatedButton(
+                  onPressed: () async {
+                    final user = await _userFuture;
+                    if (user != null) {
+                      bool? updated = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => UpdateProfileDialog(user: user),
+                      );
+                      if (updated == true) {
+                        setState(() {
+                          _userFuture = _fetchUserProfile(); // Refresh profile data
+                        });
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 50),
+                    backgroundColor: Styles.primaryColor,
+                    foregroundColor: Styles.tertiaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Text(
+                    'Update Profile',
                     style: Styles.headerStyle6.copyWith(color: Styles.tertiaryColor),
                   ),
                 ),

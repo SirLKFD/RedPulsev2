@@ -48,13 +48,8 @@ class ABottomBar extends StatefulWidget {
 }
 
 class _ABottomBarState extends State<ABottomBar> {
-  // The currently selected tab index.
   int _selectedIndex = 0;
-
-  // Global key for the CurvedNavigationBar widget.
   final GlobalKey<CurvedNavigationBarState> _bottomNavigationKey = GlobalKey();
-
-  // Navigation history to keep track of previously selected tab indices.
   final List<int> _navigationHistory = [0];
 
   /// Dynamically creates the widget options based on the provided bloodBankId.
@@ -62,7 +57,7 @@ class _ABottomBarState extends State<ABottomBar> {
     return [
       AdminHome(
         isAdminLinkedToBloodBank: widget.isAdminLinkedToBloodBank,
-        bloodBankId: '', // Pass an empty string or a default value if needed.
+        bloodBankId: '', // Pass an empty string or default value if needed.
       ),
       AdminReservationScreen(bloodBankId: bloodBankId ?? "null"),
       Inventory(bloodBankId: bloodBankId ?? "null"),
@@ -81,10 +76,6 @@ class _ABottomBarState extends State<ABottomBar> {
   }
 
   /// Intercepts the back button press.
-  ///
-  /// If there is a previous tab in the history, this method updates the UI
-  /// to show that tab and returns false to indicate that the pop has been handled.
-  /// If no history remains, it returns true to allow the default behavior.
   Future<bool> _onWillPop() async {
     if (_navigationHistory.length > 1) {
       setState(() {
@@ -94,6 +85,90 @@ class _ABottomBarState extends State<ABottomBar> {
       return false; // Handled internally.
     }
     return true; // No more history; allow default back button behavior.
+  }
+
+  /// Helper widget to wrap icons so they remain upright after rotation.
+  Widget _rotatedIcon(IconData iconData) {
+    return RotatedBox(
+      quarterTurns: 3, // Rotate back counter-clockwise by 270°.
+      child: Icon(
+        iconData,
+        size: 30,
+        color: Colors.white,
+      ),
+    );
+  }
+
+  /// Builds the left (vertical) floating navigation bar for wide screens.
+  Widget _buildLeftNavBar() {
+    return Container(
+      width: 80, // Fixed width for the vertical nav bar.
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 25,
+            offset: Offset(0, 4),
+          )
+        ],
+      ),
+      child: RotatedBox(
+        quarterTurns: 1, // Rotate the nav bar 90° clockwise.
+        child: CurvedNavigationBar(
+          index: _selectedIndex,
+          height: 65.0, // Interpreted as the nav bar's width when rotated.
+          items: <Widget>[
+            _rotatedIcon(Icons.home_outlined),
+            _rotatedIcon(Icons.ballot_outlined),
+            _rotatedIcon(Icons.bloodtype_outlined),
+            _rotatedIcon(Icons.person_outline_rounded),
+          ],
+          color: Styles.primaryColor,
+          buttonBackgroundColor: const Color(0xFFB8001F),
+          backgroundColor: Colors.transparent,
+          animationCurve: Curves.easeInOut,
+          animationDuration: const Duration(milliseconds: 600),
+          onTap: _onItemTapped,
+          letIndexChange: (index) => true,
+        ),
+      ),
+    );
+  }
+
+  /// Builds the bottom navigation bar for narrow screens.
+  Widget _buildBottomNavBar() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 25,
+            offset: Offset(0, 4),
+          )
+        ],
+      ),
+      child: CurvedNavigationBar(
+        key: _bottomNavigationKey,
+        index: _selectedIndex,
+        height: 65.0,
+        items: const <Widget>[
+          Icon(Icons.home_outlined, size: 30, color: Colors.white),
+          Icon(Icons.ballot_outlined, size: 30, color: Colors.white),
+          Icon(Icons.bloodtype_outlined, size: 30, color: Colors.white),
+          Icon(Icons.person_outline_rounded, size: 30, color: Colors.white),
+        ],
+        color: Styles.primaryColor,
+        buttonBackgroundColor: const Color(0xFFB8001F),
+        backgroundColor: Colors.transparent,
+        animationCurve: Curves.easeInOut,
+        animationDuration: const Duration(milliseconds: 600),
+        onTap: _onItemTapped,
+        letIndexChange: (index) => true,
+      ),
+    );
   }
 
   @override
@@ -108,32 +183,35 @@ class _ABottomBarState extends State<ABottomBar> {
 
         return WillPopScope(
           onWillPop: _onWillPop,
-          child: Scaffold(
-            backgroundColor: Colors.red,
-            body: Center(
-              child: _widgetOptions[_selectedIndex],
-            ),
-            bottomNavigationBar: CurvedNavigationBar(
-              key: _bottomNavigationKey,
-              index: _selectedIndex,
-              height: 65.0,
-              items: const <Widget>[
-                Icon(Icons.home_outlined, size: 30, color: Colors.white),
-                Icon(Icons.ballot_outlined, size: 30, color: Colors.white),
-                Icon(Icons.bloodtype_outlined, size: 30, color: Colors.white),
-                Icon(Icons.person_outline_rounded, size: 30, color: Colors.white),
-              ],
-              // The color of the navigation bar itself.
-              color: Styles.primaryColor,
-              // The background color of the floating button (the selected tab).
-              buttonBackgroundColor: const Color(0xFFB8001F),
-              // The color that fills the area behind the navigation bar.
-              backgroundColor: Colors.white,
-              animationCurve: Curves.easeInOut,
-              animationDuration: const Duration(milliseconds: 600),
-              onTap: _onItemTapped,
-              letIndexChange: (index) => true,
-            ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              bool isWide = constraints.maxWidth >= 800;
+
+              return Scaffold(
+                body: Stack(
+                  children: [
+                    // Main content area with left padding for wide screens.
+                    Padding(
+                      padding: EdgeInsets.only(left: isWide ? 96 : 0),
+                      child: IndexedStack(
+                        index: _selectedIndex,
+                        children: _widgetOptions,
+                      ),
+                    ),
+                    // Left navigation bar for wide screens.
+                    if (isWide)
+                      Positioned(
+                        left: 5,
+                        top: 16,
+                        bottom: 16,
+                        child: _buildLeftNavBar(),
+                      ),
+                  ],
+                ),
+                // Bottom navigation bar for narrow screens.
+                bottomNavigationBar: isWide ? null : _buildBottomNavBar(),
+              );
+            },
           ),
         );
       },
