@@ -153,6 +153,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Center(
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundImage: user.profileImageUrl != null
+                        ? NetworkImage(user.profileImageUrl!)
+                        : const AssetImage('assets/images/default_profile.jpg') as ImageProvider,
+                  ),
+                ),
+                const SizedBox(height: 20),
                 Text('Full Name:', style: Styles.headerStyle5.copyWith(fontSize: 18, color: Styles.accentColor)),
                 Text('${user.fullName}', style: Styles.headerStyle5.copyWith(fontSize: 20, fontWeight: FontWeight.bold, color: Styles.accentColor)),
                 const SizedBox(height: 15),

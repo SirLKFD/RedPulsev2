@@ -1,6 +1,5 @@
 import 'dart:core';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:redpulse/utilities/constants/enums.dart';
 
 class UserAdminModel {
   final String? id;
@@ -15,9 +14,10 @@ class UserAdminModel {
   String role;
   DateTime dateCreated;
   DateTime? lastLogin;
-  final String? bloodBankId; //For admin only
+  final String? bloodBankId; // For admin only
+  final String? profileImageUrl; // Profile image URL
 
-  //Constructor for User Model
+  // Constructor for User Model
   UserAdminModel({
     required this.id,
     required this.firstName,
@@ -32,22 +32,14 @@ class UserAdminModel {
     required this.dateCreated,
     this.lastLogin,
     this.bloodBankId,
+    this.profileImageUrl,
   });
 
   void updateFullName() {
     fullName = '$firstName $lastName';
   }
-  //Helper Methods
-  //String get fullName => '$firstName $lastName';
-  //CREATE TFORMATTER
-  //String get formattedCreated => TFormatter.formatdate(dateCreated);
-  //String get formattedUpdated => TFormatter.formatdate(lastLogin);
-  //String get formattedPhoneNo => => TFormatter.formatPhoneNumber(phoneNumber);
 
-  //Static function to create empty user model
-  //static User empty() => User(email: '');
-
-// CopyWith method for making changes to the existing UserAdminModel
+  // CopyWith method for making changes to the existing UserAdminModel
   UserAdminModel copyWith({
     String? id,
     String? firstName,
@@ -62,18 +54,13 @@ class UserAdminModel {
     DateTime? dateCreated,
     DateTime? lastLogin,
     String? bloodBankId,
+    String? profileImageUrl,
   }) {
-    // Resolve new firstName and lastName from parameters or existing values
-    final newFirstName = firstName ?? this.firstName;
-    final newLastName = lastName ?? this.lastName;
-    // Compute fullName if not provided
-    final newFullName = fullName ?? '$newFirstName $newLastName';
-
     return UserAdminModel(
       id: id ?? this.id,
-      firstName: newFirstName,
-      lastName: newLastName,
-      fullName: newFullName,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      fullName: fullName ?? '$firstName $lastName',
       email: email ?? this.email,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       address: address ?? this.address,
@@ -83,6 +70,7 @@ class UserAdminModel {
       dateCreated: dateCreated ?? this.dateCreated,
       lastLogin: lastLogin ?? this.lastLogin,
       bloodBankId: bloodBankId ?? this.bloodBankId,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
     );
   }
 
@@ -90,18 +78,19 @@ class UserAdminModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'firstName' : firstName, // Corrected key: 'firstName'
-      'lastName' : lastName,  // Corrected key: 'lastName'
+      'firstName': firstName,
+      'lastName': lastName,
       'fullName': fullName,
       'email': email,
       'phoneNumber': phoneNumber,
       'address': address,
-      'bloodType': bloodType.toString().split('.').last,
+      'bloodType': bloodType,
       'password': password,
-      'role': role.toString().split('.').last,
+      'role': role,
       'dateCreated': dateCreated.toIso8601String(),
       'lastLogin': lastLogin?.toIso8601String(),
-      if (role == AppRole.admin) 'bloodBankID': bloodBankId, // Only include bloodBankId for Admins
+      'profileImageUrl': profileImageUrl,
+      if (role == 'Admin') 'bloodBankId': bloodBankId,
     };
   }
 
@@ -110,18 +99,18 @@ class UserAdminModel {
     return UserAdminModel(
       id: documentId,
       firstName: json['firstName'] ?? '',
-      lastName: json['lastName'] ?? '', 
+      lastName: json['lastName'] ?? '',
       fullName: json['fullName'] ?? '${json['firstName'] ?? ''} ${json['lastName'] ?? ''}',
       email: json['email'] ?? '',
       phoneNumber: json['phoneNumber'] ?? '',
       address: json['address'] ?? '',
       bloodType: json['bloodType'] ?? '',
       password: json['password'] ?? '',
-      role: json['role'] ?? 'User', // Default to 'User'
+      role: json['role'] ?? 'User',
       dateCreated: DateTime.parse(json['dateCreated']),
       lastLogin: json['lastLogin'] != null ? DateTime.parse(json['lastLogin']) : null,
-      bloodBankId: json['bloodBankId'],   // Only for Admins
+      bloodBankId: json['bloodBankId'],
+      profileImageUrl: json['profileImageUrl'],
     );
   }
 }
-

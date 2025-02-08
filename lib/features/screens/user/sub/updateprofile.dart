@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:redpulse/features/models/users.dart';
 
 // Add this dialog widget to your ProfileScreen.dart file
@@ -13,12 +17,40 @@ class UpdateProfileDialog extends StatefulWidget {
 }
 
 class _UpdateProfileDialogState extends State<UpdateProfileDialog> {
+
   final _formKey = GlobalKey<FormState>();
   late String _firstName, _lastName, _phoneNumber, _address;
+  bool _isUpdated = false;
+
+
+  Future<void> _pickImage() async {
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      try {
+        final Reference storageRef = FirebaseStorage.instance.ref()
+            .child('profile_images/${widget.user.id}.jpg');
+        final UploadTask uploadTask = storageRef.putFile(File(pickedFile.path));
+        final TaskSnapshot snapshot = await uploadTask;
+        final String newUrl = await snapshot.ref.getDownloadURL();
+
+        await FirebaseFirestore.instance.collection('users')
+            .doc(widget.user.id)
+            .update({'profileImageUrl': newUrl});
+
+        setState(() => _isUpdated = true);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to upload image: $e')),
+        );
+      }
+    }
+  }
 
   @override
+
   void initState() {
     super.initState();
+
 
     // Attempt to split the existing full name into first and last names.
     // If the full name doesn't have a space, the last name will be empty.
@@ -68,6 +100,19 @@ class _UpdateProfileDialogState extends State<UpdateProfileDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Profile Image
+              GestureDetector(
+                onTap: _pickImage,
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundImage: NetworkImage(widget.user.profileImageUrl ?? ''),
+                  child: widget.user.profileImageUrl == null
+                      ? const Icon(Icons.person, size: 40)
+                      : null,
+                ),
+              ),
+              TextButton(onPressed: _pickImage, child:  const Text('Change Profile Picture'),
+              ),
               // First Name Field
               TextFormField(
                 initialValue: _firstName,
@@ -107,11 +152,17 @@ class _UpdateProfileDialogState extends State<UpdateProfileDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
+          onPressed: () => Navigator.of(context).pop(_isUpdated),
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: _updateProfile,
+          onPressed: () async {
+            if (_formKey.currentState!.validate()) {
+              _formKey.currentState!.save();
+              await _updateProfile();
+              Navigator.of(context).pop(true);
+            }
+          },
           child: const Text('Save'),
         ),
       ],
