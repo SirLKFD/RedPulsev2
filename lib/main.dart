@@ -9,6 +9,9 @@ import 'package:redpulse/utilities/constants/styles.dart';
 import 'features/screens/wrapper/wrapper.dart';
 import 'firebase_options.dart';
 
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+GlobalKey<ScaffoldMessengerState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -34,6 +37,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Red Pulse',
+      scaffoldMessengerKey: scaffoldMessengerKey, // Register the key here
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.red,

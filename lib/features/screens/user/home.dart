@@ -1,35 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:redpulse/features/models/users.dart'; // your user model
+import 'package:provider/provider.dart';
 import 'package:redpulse/features/screens/user/sub/userCardsHome.dart';
-import 'package:redpulse/services/auth.dart';
 import 'package:redpulse/utilities/constants/styles.dart';
 
-class UserHome extends StatefulWidget {
+class UserHome extends StatelessWidget {
   const UserHome({Key? key}) : super(key: key);
 
   @override
-  UserHomeState createState() => UserHomeState();
-}
-
-class UserHomeState extends State<UserHome> {
-  late Future<String> _userFullNameFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _userFullNameFuture = AuthMethod().getUserName();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    // Read the latest user data from the Provider.
+    final user = Provider.of<UserAdminModel?>(context);
+
     return Scaffold(
       appBar: PreferredSize(
-
         preferredSize: const Size.fromHeight(120),
         child: AppBar(
           backgroundColor: Styles.primaryColor,
           elevation: 0,
-          // Adjust the border of the AppBar using the shape property.
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(30),
@@ -56,21 +45,32 @@ class UserHomeState extends State<UserHome> {
           ),
         ),
       ),
-      body: FutureBuilder<String>(
-        future: _userFullNameFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError || !snapshot.hasData) {
-            return const Center(child: Text('Error fetching user name.'));
-          } else {
-            final fullName = snapshot.data!;
-            return ListView(
+      body: user == null
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+        children: [
+          // Row containing the profile image and welcome text.
+          Padding(
+            padding:
+            const EdgeInsets.symmetric(horizontal: 50, vertical: 30),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 30),
+                // Profile Image
+                CircleAvatar(
+                  radius: 30,
+                  backgroundImage: (user.profileImageUrl != null &&
+                      user.profileImageUrl!.isNotEmpty)
+                      ? NetworkImage(user.profileImageUrl!)
+                      : const AssetImage(
+                      'assets/images/default_profile.jpg')
+                  as ImageProvider,
+                ),
+                const SizedBox(width: 15),
+                // Welcome Text
+                Expanded(
                   child: Text(
-                    "Welcome, $fullName!",
+                    "Welcome, ${user.fullName}!",
                     style: GoogleFonts.robotoMono(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -78,11 +78,12 @@ class UserHomeState extends State<UserHome> {
                     ),
                   ),
                 ),
-                const userCardsHome(),
               ],
-            );
-          }
-        },
+            ),
+          ),
+          // Other content on the home screen.
+          const userCardsHome(),
+        ],
       ),
     );
   }
